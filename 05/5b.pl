@@ -43,8 +43,8 @@ sub run_instruction {
         4 => 1,
 	5 => 2,
 	6 => 2,
-	7 => 3,
-	8 => 3,
+	7 => 2,
+	8 => 2,
         99 => 0,
     };
     my $has_output = {
@@ -100,7 +100,6 @@ sub output_address {
 
 sub add {
     my ($memory, $i, $args, $output_address) = @_;
-    say "memory[$output_address] = $args->[0] + $args->[1]";
     $memory->[$output_address] = $args->[0] + $args->[1];
     return $i + 4
 }
@@ -123,6 +122,30 @@ sub output {
     my ($memory, $i, $args) = @_;
     say "OUT: " . $args->[0];
     return $i + 2
+}
+
+sub jump_if_true {
+    my ($memory, $i, $args) = @_;
+    return $args->[1] if $args->[0];
+    return $i + 3
+}
+
+sub jump_if_false {
+    my ($memory, $i, $args) = @_;
+    return $args->[1] if ! $args->[0];
+    return $i + 3
+}
+
+sub less_than {
+    my ($memory, $i, $args, $output_address) = @_;
+    $memory->[$output_address] = ($args->[0] < $args->[1]) ? 1 : 0;
+    return $i + 4
+}
+
+sub equals {
+    my ($memory, $i, $args, $output_address) = @_;
+    $memory->[$output_address] = ($args->[0] == $args->[1]) ? 1 : 0;
+    return $i + 4
 }
 
 sub halt {
