@@ -14,7 +14,7 @@ sub run {
         my $instruction = get_instruction($memory, $instruction_pointer);
         my $halt = apply_instruction($memory, $instruction);
         last if $halt;
-        $instruction_pointer += @$instruction;
+        $instruction_pointer += $instruction->{size};
     }
     
     return $memory->[0]
@@ -22,20 +22,34 @@ sub run {
 
 sub get_instruction {
     my ($memory, $instruction_pointer) = @_;
-    my @indexes = ($instruction_pointer .. $instruction_pointer + 3);
-    my $instruction = [ @{$memory}[@indexes] ];
-    print Dumper $instruction;
-    return $instruction
+	my $instruction_size = {
+		1 => 4,
+		2 => 4,
+		3 => 2,
+		4 => 2,
+	};
+	my $mode_opcode = $memory->[$instruction_pointer];
+	my $i = {};
+
+	my ($i->{mode}, $i->{opcode}) = $mode_opcode =~/(.*)(..)/;
+	$i->{size} = $instruction_size->{$i->{opcode}};
+
+	my $params_start = $instruction_pointer + 1
+	my $params_end = $instruction_pointer + $i->{size}
+
+	$i->{params} = [ @{$memory}[$params_start .. $params_end] ]
+    print Dumper $i;
+    return $i
 }
 
 sub add {
-    my ($memory, $a, $b, $c) = @_;
+    my ($memory, $instruction) = @_;
     $memory->[$c] = $memory->[$a] + $memory->[$b];
     return
 }
 
 sub mul {
-    my ($memory, $a, $b, $c) = @_;
+    my ($memory, $instruction) = @_;
     $memory->[$c] = $memory->[$a] * $memory->[$b];
     return
 }
@@ -52,7 +66,7 @@ sub apply_instruction {
         99 => \&halt,
     };
     my ($opcode, @params) = @$instruction;
-    return $ops->{$opcode}->($memory, @params)
+    return $ops->{$opcode}->($memory, $instruction)
 }
 
 my $program = <DATA>;
