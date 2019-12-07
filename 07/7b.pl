@@ -4,10 +4,7 @@ use strict;
 use warnings;
 use feature qw(say);
 use Data::Dumper;
-
-BEGIN {
-    push @INC, '.';
-}
+use lib '.';
 use Machine;
 
 my $program = <DATA>;
