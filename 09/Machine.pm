@@ -96,28 +96,17 @@ sub input {
 sub output {
     my ($self, $x) = @_;
     push @{$self->{output}}, $$x;
-    # say "OUT: " . $args->[0];
     $self->{i} += 2;
 }
 
 sub jump_if_true {
     my ($self, $x, $y) = @_;
-    if ($$x) {
-        $self->{i} = $$y;
-    }
-    else {
-        $self->{i} += 3;
-    }
+    $self->{i} = $$x ? $$y : $self->{i} + 3;
 }
 
 sub jump_if_false {
     my ($self, $x, $y) = @_;
-    if (! $$x) {
-        $self->{i} = $$y;
-    }
-    else {
-        $self->{i} += 3
-    }
+    $self->{i} = !$$x ? $$y : $self->{i} + 3;
 }
 
 sub less_than {
