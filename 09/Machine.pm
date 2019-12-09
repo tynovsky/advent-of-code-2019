@@ -4,13 +4,12 @@ use strict;
 use warnings;
 use feature 'signatures';
 no warnings 'experimental::signatures';
-use Data::Dumper;
 
 sub new($class, $program, $input, $output) {
     my $self = {
         memory => [ split /,/, $program ],
-        relative_base => 0,
         i => 0,
+        relative_base => 0,
         input => $input,
         output => $output,
         execution => 'run',
@@ -49,13 +48,16 @@ sub run_instruction($self) {
 sub args($self, $number_of_args) {
     my $mode = int($self->{memory}[$self->{i}] / 100);
     my @args = ();
-    for my $j (0 .. $number_of_args - 1) {
-        my $arg = $self->{memory}[$self->{i} + $j + 1] // 0;
+    for my $j (1 .. $number_of_args) {
+        my $arg = $self->{memory}[$self->{i} + $j] // 0;
         my $m = $mode % 10;
         $mode = ($mode - $m) / 10;
-        push @args, \($self->{memory}[$arg]) if !$m;
-        push @args, \(my $tmp = $arg) if $m == 1;
-        push @args, \($self->{memory}[$self->{relative_base} + $arg]) if $m == 2;
+        push @args, \($self->{memory}[$arg])
+            if $m == 0;
+        push @args, \(my $tmp = $arg)
+            if $m == 1;
+        push @args, \($self->{memory}[$self->{relative_base} + $arg])
+            if $m == 2;
     }
     return \@args;
 }
