@@ -17,7 +17,6 @@ sub new {
     bless $self, $class
 }
 
-
 sub run {
     my ($self) = @_;
     return if $self->{execution} eq 'halt';
@@ -54,57 +53,35 @@ sub run_instruction {
         99 => 0,
     };
 
-    my $opcode = $self->opcode();
+    my $opcode = $self->{memory}->[$self->{i}] % 100;
     my $op = $ops->{$opcode};
     my $number_of_args = $number_of_args_for->{$opcode};
     my $args = $self->args($number_of_args);
     return $op->($self, @$args)
 }
 
-sub read {
-    my ($self, $i) = @_;
-    $i //= $self->{i};
-    return $self->{memory}[$i]
-}
-
-sub write {
-    my ($self, $i, $val) = @_;
-    $self->{memory}[$i] = $val;
-}
-
-sub opcode {
-    my $self = shift;
-    return $self->{memory}->[$self->{i}] % 100;
-}
-
 sub args {
     my ($self, $number_of_args) = @_;
-    my $opcode = $self->opcode();
-    my $mode = ($self->read() - $opcode) / 100;
-    my @mode = reverse(split(//, $mode)) if $mode;
+    my $mode = int($self->{memory}[$self->{i}] / 100);
     my @args = ();
     for my $j (0 .. $number_of_args - 1) {
         my $arg = $self->{memory}[$self->{i} + $j + 1] // 0;
-        if (!$mode[$j]) {
+        my $m = $mode % 10;
+        $mode = ($mode - $m) / 10;
+        if (!$m) {
             push @args, \($self->{memory}[$arg]);
             next;
         }
-        if ($mode[$j] == 1) {
+        if ($m == 1) {
             push @args, \(my $tmp = $arg);
             next;
         }
-        if ($mode[$j] == 2) {
+        if ($m == 2) {
             push @args, \($self->{memory}[$self->{relative_base} + $arg]);
             next;
         }
     }
     return \@args;
-}
-
-sub write_address {
-    my ($memory, $i, $index_offset) = @_;
-    return if ! $index_offset;
-    return $memory->[$i + $index_offset]
 }
 
 sub add {
