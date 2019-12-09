@@ -29,33 +29,20 @@ sub run {
 sub run_instruction {
     my ($self) = @_;
     my $ops = {
-        1 => \&add,
-        2 => \&mul,
-        3 => \&input,
-        4 => \&output,
-        5 => \&jump_if_true,
-        6 => \&jump_if_false,
-        7 => \&less_than,
-        8 => \&equals,
-	9 => \&relative_base_offset,
-        99 => \&halt,
-    };
-    my $number_of_args_for = {
-        1 => 3,
-        2 => 3,
-        3 => 1,
-        4 => 2,
-        5 => 3,
-        6 => 3,
-        7 => 3,
-        8 => 3,
-	9 => 1,
-        99 => 0,
+        1 =>  [\&add, 3],
+        2 =>  [\&mul, 3],
+        3 =>  [\&input, 1],
+        4 =>  [\&output, 2],
+        5 =>  [\&jump_if_true, 3],
+        6 =>  [\&jump_if_false, 3],
+        7 =>  [\&less_than, 3],
+        8 =>  [\&equals, 3],
+	9 =>  [\&relative_base_offset, 1],
+        99 => [\&halt, 0],
     };
 
     my $opcode = $self->{memory}->[$self->{i}] % 100;
-    my $op = $ops->{$opcode};
-    my $number_of_args = $number_of_args_for->{$opcode};
+    my ($op, $number_of_args) = @{ $ops->{$opcode} };
     my $args = $self->args($number_of_args);
     return $op->($self, @$args)
 }
