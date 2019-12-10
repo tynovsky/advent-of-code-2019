@@ -25,9 +25,6 @@ for my $i (0 .. scalar(@$asteroids) - 1) {
 
 my $max_count = (reverse sort {$a <=> $b} keys %visible_counts)[0];
 
-print Dumper $visible_counts{$max_count};
-say $max_count;
-
 my ($x, $y) = @{$visible_counts{$max_count}}[0,1];
 my $visible_asteroids = visible_asteroids($x, $y, $asteroids);
 
