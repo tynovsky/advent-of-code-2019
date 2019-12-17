@@ -8,11 +8,13 @@ use lib '.';
 use Machine;
 
 
-my $main = "A\n";
-my $A = "L,5\n";
-my $B = "R\n";
-my $C = "R\n";
+my $A = "L,6,R,12,R,8\n";
+my $B = "R,8,R,12,L,12\n";
+my $C = "R,12,L,12,L,4,L,4\n";
+my $main = "A,B,B,A,C,A,C,A,C,B\n";
 my $video = "n\n";
+
+
 
 sub to_ascii {
     my ($str) = @_;
@@ -20,49 +22,145 @@ sub to_ascii {
 }
 
 my $in = [
-    to_ascii($main), 
-    to_ascii($A), 
-    to_ascii($B), 
-    to_ascii($C), 
-    to_ascii($video), 
+    to_ascii($main),
+    to_ascii($A),
+    to_ascii($B),
+    to_ascii($C),
+    to_ascii($video),
 ];
-print Dumper $in;
 my $out = [];
 my $m = Machine->new(<DATA>, $in, $out);
 
 $m->run();
 
+
+# my $robot;
+# for my $i (0 .. (scalar(@$lines)-1)) {
+#     for my $j (0 .. (scalar(@{$lines->[0]})-1)) {
+#         if ($lines->[$i][$j] =~ /^[\^><v]$/) {
+#             $robot = {
+#                 coords => [$i, $j],
+#                 dir => $lines->[$i][$j],
+#             };
+#         }
+#     }
+# }
+
+# sub print_map {
+#     my ($lines) = @_;
+#     say "==MAP>>";
+#     for my $i (0 .. (scalar(@$lines)-1)) {
+#         for my $j (0 .. (scalar(@{$lines->[0]})-1)) {
+#             print $lines->[$i][$j];
+#         }
+#         print "\n";
+#     }
+#     say "<<MAP==";
+# }
+
+# my @path;
+# my $steps = 0;
+# while (1) {
+#     $lines->[$robot->{coords}[0]][$robot->{coords}[1]] = $robot->{dir};
+#     print_map($lines);
+#     $lines->[$robot->{coords}[0]][$robot->{coords}[1]] = '#';
+#     if (can_go_straight($robot, $lines)) {
+#         go_straight($robot->{coords}, \$robot->{dir});
+#         $steps++;
+#     }
+#     elsif (can_go_right($robot, $lines)) {
+#         go_right($robot->{coords}, \$robot->{dir});
+#         push @path, ($steps, "R");
+#         $steps = 1;
+#     }
+#     elsif (can_go_left($robot, $lines)) {
+#         go_left($robot->{coords}, \$robot->{dir});
+#         push @path, ($steps, "L");
+#         $steps = 1;
+#     }
+#     else {
+#         push @path, $steps;
+#         last
+#     }
+# }
+# say "==PATH>>";
+# say join( ',', @path) =~ s/(.{20}.?,)/$1\n/gr;
+# say scalar(@path);
+# say "<<PATH==";
+
+# sub go_straight {
+#     my ($coords, $dir) = @_;
+
+#     $coords->[0]-- if $$dir eq '^';
+#     $coords->[0]++ if $$dir eq 'v';
+#     $coords->[1]++ if $$dir eq '>';
+#     $coords->[1]-- if $$dir eq '<';
+# }
+
+# sub go_right {
+#     my ($coords, $dir) = @_;
+
+#     $coords->[0]-- if $$dir eq '<';
+#     $coords->[0]++ if $$dir eq '>';
+#     $coords->[1]++ if $$dir eq '^';
+#     $coords->[1]-- if $$dir eq 'v';
+
+#     $$dir = {'<' => '^', '>' => 'v', '^' => '>', 'v' => '<'}->{$$dir}
+# }
+
+# sub go_left {
+#     my ($coords, $dir) = @_;
+
+#     $coords->[0]++ if $$dir eq '<';
+#     $coords->[0]-- if $$dir eq '>';
+#     $coords->[1]-- if $$dir eq '^';
+#     $coords->[1]++ if $$dir eq 'v';
+
+#     $$dir = {'<' => 'v', '>' => '^', '^' => '<', 'v' => '>'}->{$$dir}
+# }
+
+# sub can_go_straight {
+#     my ($robot, $lines) = @_;
+
+#     my @coords = @{$robot->{coords}};
+#     my $dir = $robot->{dir};
+#     go_straight(\@coords, \$dir);
+#     return 0 if $coords[0] < 0 || $coords[1] < 0;
+#     return 0 if $coords[0] > scalar(@$lines)-1|| $coords[1] > scalar(@{$lines->[0]})-1;
+#     return $lines->[$coords[0]][$coords[1]] eq '#'
+# }
+
+# sub can_go_right {
+#     my ($robot, $lines) = @_;
+
+#     my @coords = @{$robot->{coords}};
+#     my $dir = $robot->{dir};
+#     go_right(\@coords, \$dir);
+#     return 0 if $coords[0] < 0 || $coords[1] < 0;
+#     return 0 if $coords[0] > scalar(@$lines)-1|| $coords[1] > scalar(@{$lines->[0]})-1;
+#     return $lines->[$coords[0]][$coords[1]] eq '#'
+# }
+
+# sub can_go_left {
+#     my ($robot, $lines) = @_;
+
+#     my @coords = @{$robot->{coords}};
+#     my $dir = $robot->{dir};
+#     go_left(\@coords, \$dir);
+#     return 0 if $coords[0] < 0 || $coords[1] < 0;
+#     return 0 if $coords[0] > scalar(@$lines)-1|| $coords[1] > scalar(@{$lines->[0]})-1;
+#     return $lines->[$coords[0]][$coords[1]] eq '#'
+# }
+
 my $load = 1;
 my $prev = '';
-my $lines = [];
-my $line = [];
 while (my $ord = shift @$out) {
     my $char = chr($ord);
-    # print $char;
+    print $char;
     $load = 0 if $prev eq "\n" && $char eq "\n";
     $prev = $char;
     last if !$load;
-    if($char eq "\n") {
-        push @$lines, $line;
-        $line = [];
-        next
-    }
-    push @$line, $char
 }
-
-my $robot;
-for my $i (0 .. (scalar(@$lines)-1)) {
-    for my $j (0 .. (scalar(@{$lines->[0]})-1)) {
-        if ($lines->[$i][$j] =~ /[^><v]/) {
-            $robot = {
-                coords => [$i, $j],
-                dir => $lines->[$i][$j]
-            };
-        }
-    }
-}
-
-print Dumper $robot;
 
 $load = 1;
 $prev = '';
