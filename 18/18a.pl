@@ -20,24 +20,24 @@ remove_door(\%paths_from, '@');
 
 my %all_keys = map { ($_ => 1) } (grep { uc($_) ne $_ } (keys %paths_from));
 
-print Dumper \%paths_from;
+# print Dumper \%paths_from;
 my $known_minimum = "inf";
 my $cache = {};
 say shortest_path(\%paths_from, $current_options, \%all_keys, 0, \$known_minimum, [], $cache);
 
 sub shortest_path($paths_from_ref, $current_options, $missing_keys, $current_length, $known_minimum, $path, $cache) {
 
-    say "missing keys: ", sort keys %$missing_keys;
+    # say "missing keys: ", sort keys %$missing_keys;
     return "inf" if $current_length >= $$known_minimum;
     my $misskeys = join '', (sort keys %$missing_keys);
     my $curropts = join ',', (map {"$_=>$current_options->{$_}"} (sort keys %$current_options));
     my $cache_key = $misskeys . ' ' . $curropts;
     if (exists $cache->{$cache_key}) {
-        say "hit";
+        # say "hit";
         return $current_length + $cache->{$cache_key}
     }
     if (keys %$missing_keys == 0) {
-        say "yay: @$path $current_length";
+        # say "yay: @$path $current_length";
         $$known_minimum = $current_length;
         return $current_length 
     }
@@ -47,7 +47,7 @@ sub shortest_path($paths_from_ref, $current_options, $missing_keys, $current_len
     return "inf" if !@reachable_keys;
     my $shortest_path = "inf";
     for my $key (@reachable_keys) {
-        say ">$key";
+        # say ">$key";
         my %missing_keys = %$missing_keys;
         my $paths_from = clone_paths_from($paths_from_ref);
         delete $missing_keys{$key};
@@ -59,10 +59,10 @@ sub shortest_path($paths_from_ref, $current_options, $missing_keys, $current_len
         my $path_length = shortest_path($paths_from, $options, \%missing_keys, $current_length + $current_options->{$key}, $known_minimum, \@path, $cache);
         
         $shortest_path = min($shortest_path, $path_length);
-        say "<$key"; 
+        # say "<$key"; 
     }
     $cache->{$cache_key} = $shortest_path - $current_length;
-    say "writing $cache_key";
+    # say "writing $cache_key";
     return $shortest_path
 }
 
