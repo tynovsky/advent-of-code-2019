@@ -15,54 +15,35 @@ for my $object (keys %$coords_of) {
     $paths_from{$object} = paths_from($map, $coords_of, $object);
 }
 
-my $current_options = $paths_from{'@'};
-remove_door(\%paths_from, '@');
-
 my %all_keys = map { ($_ => 1) } (grep { uc($_) ne $_ } (keys %paths_from));
+say shortest_path(\%paths_from, '@', \%all_keys, {});
 
-# print Dumper \%paths_from;
-my $known_minimum = "inf";
-my $cache = {};
-say shortest_path(\%paths_from, $current_options, \%all_keys, 0, \$known_minimum, [], $cache);
-
-sub shortest_path($paths_from_ref, $current_options, $missing_keys, $current_length, $known_minimum, $path, $cache) {
-
-    # say "missing keys: ", sort keys %$missing_keys;
-    return "inf" if $current_length >= $$known_minimum;
-    my $misskeys = join '', (sort keys %$missing_keys);
-    my $curropts = join ',', (map {"$_=>$current_options->{$_}"} (sort keys %$current_options));
-    my $cache_key = $misskeys . ' ' . $curropts;
+sub shortest_path($paths_from_ref, $current_position, $missing_keys, $cache) {
+    my $cache_key = join '', (sort keys %$missing_keys), "-$current_position";
     if (exists $cache->{$cache_key}) {
-        # say "hit";
-        return $current_length + $cache->{$cache_key}
+        return $cache->{$cache_key}
     }
-    if (keys %$missing_keys == 0) {
-        # say "yay: @$path $current_length";
-        $$known_minimum = $current_length;
-        return $current_length 
-    }
-    my @reachable_keys = sort {$current_options->{$a} <=> $current_options->{$b}} grep { uc($_) ne $_ } (keys %$current_options);
-    # print "paths_from", Dumper $paths_from_ref;
-    # print "options", Dumper $current_options;
+
+    delete $missing_keys->{$current_position};
+    return 0 if ! keys %$missing_keys;
+    my $current_options = $paths_from_ref->{$current_position};
+    remove_door($paths_from_ref, uc $current_position);
+    remove_door($paths_from_ref, $current_position);
+
+    my @reachable_keys = sort {
+             $current_options->{$a} <=> $current_options->{$b}
+        } grep { uc($_) ne $_ } (keys %$current_options);
     return "inf" if !@reachable_keys;
     my $shortest_path = "inf";
     for my $key (@reachable_keys) {
-        # say ">$key";
         my %missing_keys = %$missing_keys;
         my $paths_from = clone_paths_from($paths_from_ref);
-        delete $missing_keys{$key};
-        remove_door($paths_from, uc $key);
-        my $options = $paths_from->{$key};
-        remove_door($paths_from, $key);
-        delete $options->{$key};
-        my @path = (@$path, $key);
-        my $path_length = shortest_path($paths_from, $options, \%missing_keys, $current_length + $current_options->{$key}, $known_minimum, \@path, $cache);
+        my $path_length = $current_options->{$key}
+            + shortest_path($paths_from, $key, \%missing_keys, $cache);
         
         $shortest_path = min($shortest_path, $path_length);
-        # say "<$key"; 
     }
-    $cache->{$cache_key} = $shortest_path - $current_length;
-    # say "writing $cache_key";
+    $cache->{$cache_key} = $shortest_path;
     return $shortest_path
 }
 
