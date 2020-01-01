@@ -10,38 +10,50 @@ no warnings 'experimental::signatures';
 my ($map, $coords_of) = process_input([<>]);
 # print Dumper $map;
 # print Dumper $coords_of;
+
 my %paths_from;
 for my $object (keys %$coords_of) {
     $paths_from{$object} = paths_from($map, $coords_of, $object);
 }
 
 my %all_keys = map { ($_ => 1) } (grep { uc($_) ne $_ } (keys %paths_from));
-say shortest_path(\%paths_from, '@', \%all_keys, {});
+# say shortest_path(\%paths_from, ['@'], \%all_keys, {});
+say shortest_path(\%paths_from, [1,2,3,4], \%all_keys, {});
 
-sub shortest_path($paths_from_ref, $current_position, $missing_keys, $cache) {
-    my $cache_key = join '', (sort keys %$missing_keys), "-$current_position";
+sub shortest_path($paths_from, $current_position, $missing_keys, $cache) {
+    my $cache_key = join('', (sort keys %$missing_keys)) . '-' . join('', @$current_position);
     if (exists $cache->{$cache_key}) {
         return $cache->{$cache_key}
     }
 
-    delete $missing_keys->{$current_position};
+    delete $missing_keys->{$_} for @$current_position;
     return 0 if ! keys %$missing_keys;
-    my $current_options = $paths_from_ref->{$current_position};
-    remove_door($paths_from_ref, uc $current_position);
-    remove_door($paths_from_ref, $current_position);
+    say @$current_position;
+    say sort keys %$missing_keys;
 
-    my @reachable_keys = sort {
-             $current_options->{$a} <=> $current_options->{$b}
-        } grep { uc($_) ne $_ } (keys %$current_options);
-    return "inf" if !@reachable_keys;
+    my $i = 0;
     my $shortest_path = "inf";
-    for my $key (@reachable_keys) {
-        my %missing_keys = %$missing_keys;
-        my $paths_from = clone_paths_from($paths_from_ref);
-        my $path_length = $current_options->{$key}
-            + shortest_path($paths_from, $key, \%missing_keys, $cache);
-        
-        $shortest_path = min($shortest_path, $path_length);
+    for my $i (0 .. scalar(@$current_position)-1) {
+        my $paths_from_clone = clone_paths_from($paths_from);
+        my $curr = $current_position->[$i];
+        for my $k (@$current_position) {
+            remove_door($paths_from_clone, uc $k) if uc $k ne $k
+        }
+        my $curropts = $paths_from_clone->{$curr};
+        remove_door($paths_from_clone, $curr);
+        my @reachable_keys = sort {
+                 $curropts->{$a} <=> $curropts->{$b}
+            } grep { uc($_) ne $_ } (keys %$curropts);
+        next if !@reachable_keys;
+        for my $key (@reachable_keys) {
+            my %missing_keys = %$missing_keys;
+            my @next_position = @$current_position;
+            $next_position[$i] = $key;
+            my $path_length = $curropts->{$key}
+                + shortest_path(clone_paths_from($paths_from_clone), \@next_position, \%missing_keys, $cache);
+
+            $shortest_path = min($shortest_path, $path_length);
+        }
     }
     $cache->{$cache_key} = $shortest_path;
     return $shortest_path
